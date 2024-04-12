@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users
     last_name         TEXT,
     first_name        TEXT,
     middle_name       TEXT,
-    role              roles           NOT NULL,
+    role              roles           NOT NULL DEFAULT 'user',
     phone             CHAR(11) UNIQUE NOT NULL,
     password          TEXT            NOT NULL,
     email             TEXT UNIQUE,

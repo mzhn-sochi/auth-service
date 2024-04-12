@@ -10,25 +10,27 @@ const (
 type Role int8
 
 type UserCredentials struct {
-	Phone    string  `json:"phone"`
-	Email    *string `json:"email"`
-	Password string  `json:"password"`
+	Phone    string  `json:"phone" db:"phone"`
+	Email    *string `json:"email" db:"email"`
+	Password string  `json:"password" db:"password"`
 }
 
 type User struct {
 	Id string `json:"id"`
 	UserCredentials
-	LastName   *string    `json:"last_name"`
-	FirstName  *string    `json:"first_name"`
-	MiddleName *string    `json:"middle_name"`
-	Role       Role       `json:"role"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  *time.Time `json:"updated_at"`
+	LastName        *string    `json:"lastName" db:"last_name"`
+	FirstName       *string    `json:"firstName" db:"first_name"`
+	MiddleName      *string    `json:"middleName" db:"middle_name"`
+	Role            string     `json:"role" db:"role"`
+	IsPhoneVerified bool       `json:"isPhoneVerified" db:"is_phone_verified"`
+	IsEmailVerified bool       `json:"isEmailVerified" db:"is_email_verified"`
+	CreatedAt       time.Time  `json:"createdAt" db:"created_at"`
+	UpdatedAt       *time.Time `json:"updatedAt" db:"updated_at"`
 }
 
 type UserClaims struct {
 	Id   string `json:"id"`
-	Role Role   `json:"role"`
+	Role string `json:"role"`
 }
 
 type Tokens struct {
