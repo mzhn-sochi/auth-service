@@ -1,6 +1,6 @@
 BIN_DIR=bin
 
-MODULE=github.com/mzhn-sochi/auth-service
+#MODULE=github.com/mzhn-sochi/auth-service
 
 build:
 	mkdir -p $(BIN_DIR) #
@@ -8,7 +8,7 @@ build:
 	go build -o $(BIN_DIR)/ -v ./cmd/service
 
 gen:
-	protoc --go_opt=module=$(MODULE) --go-grpc_opt=module=$(MODULE) \
+	protoc  \
 	 	--go_out=. --go-grpc_out=. \
 		-I ./proto ./proto/auth.proto
 	wire ./internal/app
@@ -20,10 +20,10 @@ deploy:
 	docker compose up -d
 
 migrate.up:
-	migrate -path ./migrations -database 'postgres://postgres:postgres@localhost:5434/users?sslmode=disable' up
+	migrate -path ./migrations -database 'postgres://postgres:postgres@localhost:5436/users?sslmode=disable' up
 
 migrate.down:
-	migrate -path ./migrations -database 'postgres://postgres:postgres@localhost:5434/users?sslmode=disable' down
+	migrate -path ./migrations -database 'postgres://postgres:postgres@localhost:5436/users?sslmode=disable' down
 
 clean:
 	rm -r $(BIN_DIR) api #

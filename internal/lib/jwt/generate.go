@@ -12,6 +12,7 @@ func Generate(user *entity.UserClaims, ttl time.Duration, secret []byte) (string
 		UserClaims: *user,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
 

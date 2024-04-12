@@ -21,6 +21,17 @@ services:
     ports:
       - "5436:5432"
 
+  redis:
+    image: redis:7.2.4-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    env_file:
+      - .env.redis
+    volumes:
+      - redisdata:/data
+
 
 volumes:
   pgdata:
+  redisdata:
