@@ -34,13 +34,13 @@ func Init() (*App, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	userStorage := pg.NewUserStorage(db, logger)
+	userStorage := pg.NewUserStorage(db)
 	client, cleanup2, err := initRedis(configConfig, logger)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	tokenStorage := redis.NewTokenStorage(logger, configConfig, client)
+	tokenStorage := redis.NewTokenStorage(configConfig, client)
 	useCase := usecase.New(configConfig, userStorage, tokenStorage)
 	server := grpc.New(configConfig, useCase)
 	app := newApp(configConfig, logger, server)

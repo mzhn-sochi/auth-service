@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/mzhn-sochi/auth-service/internal/config"
@@ -144,6 +145,11 @@ func (s *UseCase) Authenticate(ctx context.Context, accessToken string, role str
 	claims, err := jwt.Validate(accessToken, s.cfg.JWT.Access.Secret)
 	if err != nil {
 		log.Error("failed to validate access token", slog.String("err", err.Error()))
+
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return ErrTokenExpired
+		}
+
 		return ErrInvalidToken
 	}
 
@@ -188,12 +194,12 @@ func (s *UseCase) Refresh(ctx context.Context, refreshToken string) (*entity.Tok
 
 func (s *UseCase) generateJwtPair(claims *entity.UserClaims) (*entity.Tokens, error) {
 
-	refresh, err := jwt.Generate(claims, time.Duration(s.cfg.JWT.Refresh.TTL)*time.Hour, []byte(s.cfg.JWT.Refresh.Secret))
+	refresh, err := jwt.Generate(claims, time.Duration(s.cfg.JWT.Refresh.TTL)*time.Minute, []byte(s.cfg.JWT.Refresh.Secret))
 	if err != nil {
 		return nil, err
 	}
 
-	access, err := jwt.Generate(claims, time.Duration(s.cfg.JWT.Access.TTL)*time.Hour, []byte(s.cfg.JWT.Access.Secret))
+	access, err := jwt.Generate(claims, time.Duration(s.cfg.JWT.Access.TTL)*time.Minute, []byte(s.cfg.JWT.Access.Secret))
 	if err != nil {
 		return nil, err
 	}

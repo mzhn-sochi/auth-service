@@ -33,7 +33,7 @@ type Config struct {
 
 	JWT struct {
 		Access struct {
-			TTL    int    `env:"JWT_ACCESS_TTL" env-default:"15"`
+			TTL    int    `env:"JWT_ACCESS_TTL" env-default:"1"`
 			Secret string `env:"JWT_ACCESS_SECRET"`
 		}
 

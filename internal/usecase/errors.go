@@ -9,4 +9,5 @@ var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrUserAlreadyExists  = errors.New("user already exists")
 	ErrSessionNotFound    = errors.New("session not found")
+	ErrTokenExpired       = errors.New("session expired")
 )

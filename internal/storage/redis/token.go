@@ -9,13 +9,12 @@ import (
 )
 
 type TokenStorage struct {
-	log    *slog.Logger
 	cfg    *config.Config
 	client *redis.Client
 }
 
-func NewTokenStorage(log *slog.Logger, cfg *config.Config, client *redis.Client) *TokenStorage {
-	return &TokenStorage{log: log, client: client, cfg: cfg}
+func NewTokenStorage(cfg *config.Config, client *redis.Client) *TokenStorage {
+	return &TokenStorage{client: client, cfg: cfg}
 }
 
 func (t TokenStorage) Get(ctx context.Context, userId string) (string, error) {

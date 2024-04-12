@@ -9,12 +9,11 @@ import (
 )
 
 type UserStorage struct {
-	db  *sqlx.DB
-	log *slog.Logger
+	db *sqlx.DB
 }
 
-func NewUserStorage(db *sqlx.DB, logger *slog.Logger) *UserStorage {
-	return &UserStorage{db: db, log: logger}
+func NewUserStorage(db *sqlx.DB) *UserStorage {
+	return &UserStorage{db: db}
 }
 
 func (u *UserStorage) Get(ctx context.Context, id string) (*entity.User, error) {
@@ -29,6 +28,7 @@ func (u *UserStorage) Get(ctx context.Context, id string) (*entity.User, error) 
 		Limit(1).
 		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
+
 	if err != nil {
 		log.Error("Failed to generate SQL query", slog.String("err", err.Error()))
 		return nil, err

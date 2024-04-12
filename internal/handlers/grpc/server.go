@@ -9,6 +9,7 @@ import (
 	"github.com/mzhn-sochi/auth-service/internal/usecase"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"log/slog"
 )
 
 var _ auth.AuthServer = (*Server)(nil)
@@ -36,7 +37,7 @@ func New(cfg *config.Config, uc AuthUseCase) *Server {
 	}
 }
 
-func (s Server) SignIn(ctx context.Context, request *auth.SignInRequest) (*auth.Tokens, error) {
+func (s *Server) SignIn(ctx context.Context, request *auth.SignInRequest) (*auth.Tokens, error) {
 	user := &entity.User{
 		UserCredentials: entity.UserCredentials{
 			Phone:    request.Phone,
@@ -63,7 +64,7 @@ func (s Server) SignIn(ctx context.Context, request *auth.SignInRequest) (*auth.
 	}, nil
 }
 
-func (s Server) SignUp(ctx context.Context, request *auth.SignUpRequest) (*auth.Tokens, error) {
+func (s *Server) SignUp(ctx context.Context, request *auth.SignUpRequest) (*auth.Tokens, error) {
 	user := &entity.User{
 		UserCredentials: entity.UserCredentials{
 			Phone:    request.Phone,
@@ -86,7 +87,7 @@ func (s Server) SignUp(ctx context.Context, request *auth.SignUpRequest) (*auth.
 	}, nil
 }
 
-func (s Server) SignOut(ctx context.Context, request *auth.SignOutRequest) (*auth.Empty, error) {
+func (s *Server) SignOut(ctx context.Context, request *auth.SignOutRequest) (*auth.Empty, error) {
 
 	err := s.uc.SingOut(ctx, request.AccessToken)
 	if err != nil {
@@ -104,11 +105,11 @@ func (s Server) SignOut(ctx context.Context, request *auth.SignOutRequest) (*aut
 	return &auth.Empty{}, nil
 }
 
-func (s Server) Auth(ctx context.Context, request *auth.AuthRequest) (*auth.Empty, error) {
+func (s *Server) Auth(ctx context.Context, request *auth.AuthRequest) (*auth.Empty, error) {
 
 	if err := s.uc.Authenticate(ctx, request.AccessToken, request.Role.String()); err != nil {
-		if errors.Is(err, usecase.ErrInvalidToken) {
-			return nil, status.Error(codes.Unauthenticated, "invalid token")
+		if errors.Is(err, usecase.ErrTokenExpired) {
+			return nil, status.Error(codes.Unauthenticated, "token expired")
 		}
 
 		if errors.Is(err, usecase.ErrInvalidRole) {
@@ -119,13 +120,38 @@ func (s Server) Auth(ctx context.Context, request *auth.AuthRequest) (*auth.Empt
 			return nil, status.Error(codes.NotFound, "session not found")
 		}
 
+		if errors.Is(err, usecase.ErrInvalidToken) {
+			return nil, status.Error(codes.InvalidArgument, "invalid token")
+		}
+
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &auth.Empty{}, nil
 }
 
-func (s Server) Refresh(ctx context.Context, request *auth.RefreshRequest) (*auth.Tokens, error) {
-	//TODO implement me
-	panic("implement me")
+func (s *Server) Refresh(ctx context.Context, request *auth.RefreshRequest) (*auth.Tokens, error) {
+
+	log := ctx.Value("logger").(*slog.Logger).With("method", "Refresh")
+
+	tokens, err := s.uc.Refresh(ctx, request.RefreshToken)
+	if err != nil {
+		if errors.Is(err, usecase.ErrInvalidToken) {
+			log.Debug("invalid token")
+			return nil, status.Error(codes.InvalidArgument, "invalid token")
+		}
+
+		if errors.Is(err, usecase.ErrSessionNotFound) {
+			log.Debug("session not found")
+			return nil, status.Error(codes.NotFound, "session not found")
+		}
+
+		log.Debug("internal server error", slog.String("err", err.Error()))
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &auth.Tokens{
+		Access:  tokens.Access,
+		Refresh: tokens.Refresh,
+	}, nil
 }
