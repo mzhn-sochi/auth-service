@@ -22,18 +22,24 @@ type AuthUseCase interface {
 	Refresh(ctx context.Context, refreshToken string) (*entity.Tokens, error)
 }
 
+type UserUseCase interface {
+	FindById(ctx context.Context, id string) (*entity.User, error)
+}
+
 type Server struct {
 	cfg *config.Config
 
-	uc AuthUseCase
+	auc AuthUseCase
+	uuc UserUseCase
 
 	auth.UnimplementedAuthServer
 }
 
-func New(cfg *config.Config, uc AuthUseCase) *Server {
+func New(cfg *config.Config, uc AuthUseCase, uuc UserUseCase) *Server {
 	return &Server{
 		cfg: cfg,
-		uc:  uc,
+		auc: uc,
+		uuc: uuc,
 	}
 }
 
@@ -45,7 +51,7 @@ func (s *Server) SignIn(ctx context.Context, request *auth.SignInRequest) (*auth
 		},
 	}
 
-	tokens, err := s.uc.SignIn(ctx, user)
+	tokens, err := s.auc.SignIn(ctx, user)
 	if err != nil {
 		if errors.Is(err, usecase.ErrUserNotFound) {
 			return nil, status.Error(codes.NotFound, "user not found")
@@ -72,7 +78,7 @@ func (s *Server) SignUp(ctx context.Context, request *auth.SignUpRequest) (*auth
 		},
 	}
 
-	tokens, err := s.uc.SignUp(ctx, user)
+	tokens, err := s.auc.SignUp(ctx, user)
 	if err != nil {
 		if errors.Is(err, usecase.ErrUserAlreadyExists) {
 			return nil, status.Error(codes.AlreadyExists, "user already exists")
@@ -89,7 +95,7 @@ func (s *Server) SignUp(ctx context.Context, request *auth.SignUpRequest) (*auth
 
 func (s *Server) SignOut(ctx context.Context, request *auth.SignOutRequest) (*auth.Empty, error) {
 
-	err := s.uc.SingOut(ctx, request.AccessToken)
+	err := s.auc.SingOut(ctx, request.AccessToken)
 	if err != nil {
 		if errors.Is(err, usecase.ErrInvalidToken) {
 			return nil, status.Error(codes.InvalidArgument, "invalid token")
@@ -107,7 +113,7 @@ func (s *Server) SignOut(ctx context.Context, request *auth.SignOutRequest) (*au
 
 func (s *Server) Auth(ctx context.Context, request *auth.AuthRequest) (*auth.AuthResponse, error) {
 
-	claims, err := s.uc.Authenticate(ctx, request.AccessToken, entity.Role(request.Role))
+	claims, err := s.auc.Authenticate(ctx, request.AccessToken, entity.Role(request.Role))
 	if err != nil {
 		if errors.Is(err, usecase.ErrTokenExpired) {
 			return nil, status.Error(codes.Unauthenticated, "token expired")
@@ -138,7 +144,7 @@ func (s *Server) Refresh(ctx context.Context, request *auth.RefreshRequest) (*au
 
 	log := ctx.Value("logger").(*slog.Logger).With("method", "Refresh")
 
-	tokens, err := s.uc.Refresh(ctx, request.RefreshToken)
+	tokens, err := s.auc.Refresh(ctx, request.RefreshToken)
 	if err != nil {
 		if errors.Is(err, usecase.ErrInvalidToken) {
 			log.Debug("invalid token")
@@ -157,5 +163,25 @@ func (s *Server) Refresh(ctx context.Context, request *auth.RefreshRequest) (*au
 	return &auth.Tokens{
 		Access:  tokens.Access,
 		Refresh: tokens.Refresh,
+	}, nil
+}
+
+func (s *Server) FindUserById(ctx context.Context, request *auth.FindUserByIdRequest) (*auth.User, error) {
+
+	user, err := s.uuc.FindById(ctx, request.Id)
+	if err != nil {
+		if errors.Is(err, usecase.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &auth.User{
+		Id:         user.Id,
+		Phone:      user.Phone,
+		LastName:   user.LastName,
+		FirstName:  user.FirstName,
+		MiddleName: user.MiddleName,
 	}, nil
 }

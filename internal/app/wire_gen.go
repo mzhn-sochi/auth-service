@@ -42,7 +42,7 @@ func Init() (*App, func(), error) {
 	}
 	tokenStorage := redis.NewTokenStorage(configConfig, client)
 	useCase := usecase.New(configConfig, userStorage, tokenStorage)
-	server := grpc.New(configConfig, useCase)
+	server := grpc.New(configConfig, useCase, useCase)
 	app := newApp(configConfig, logger, server)
 	return app, func() {
 		cleanup2()

@@ -41,6 +41,7 @@ func Init() (*App, func(), error) {
 			// handlers
 			wire.NewSet(grpc.New),
 			wire.Bind(new(grpc.AuthUseCase), new(*usecase.UseCase)),
+			wire.Bind(new(grpc.UserUseCase), new(*usecase.UseCase)),
 		),
 	)
 }
