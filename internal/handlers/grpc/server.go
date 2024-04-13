@@ -185,3 +185,32 @@ func (s *Server) FindUserById(ctx context.Context, request *auth.FindUserByIdReq
 		MiddleName: user.MiddleName,
 	}, nil
 }
+
+func (s *Server) FindUsersByIds(ctx context.Context, request *auth.FindUsersByIdsRequest) (*auth.FindUsersByIdsResponse, error) {
+
+	uu := make([]*auth.User, 0)
+
+	for _, id := range request.Ids {
+		user, err := s.uuc.FindById(ctx, id)
+		if err != nil {
+			if errors.Is(err, usecase.ErrUserNotFound) {
+				return nil, status.Error(codes.NotFound, "user not found")
+			}
+
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		uu = append(uu, &auth.User{
+			Id:         user.Id,
+			Phone:      user.Phone,
+			LastName:   user.LastName,
+			FirstName:  user.FirstName,
+			MiddleName: user.MiddleName,
+		})
+	}
+
+	return &auth.FindUsersByIdsResponse{
+		Users: uu,
+	}, nil
+
+}
