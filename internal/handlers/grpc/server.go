@@ -18,7 +18,7 @@ type AuthUseCase interface {
 	SignUp(ctx context.Context, user *entity.User) (*entity.Tokens, error)
 	SignIn(ctx context.Context, user *entity.User) (*entity.Tokens, error)
 	SingOut(ctx context.Context, accessToken string) error
-	Authenticate(ctx context.Context, accessToken string, role entity.Role) error
+	Authenticate(ctx context.Context, accessToken string, role entity.Role) (*entity.UserClaims, error)
 	Refresh(ctx context.Context, refreshToken string) (*entity.Tokens, error)
 }
 
@@ -105,9 +105,10 @@ func (s *Server) SignOut(ctx context.Context, request *auth.SignOutRequest) (*au
 	return &auth.Empty{}, nil
 }
 
-func (s *Server) Auth(ctx context.Context, request *auth.AuthRequest) (*auth.Empty, error) {
+func (s *Server) Auth(ctx context.Context, request *auth.AuthRequest) (*auth.AuthResponse, error) {
 
-	if err := s.uc.Authenticate(ctx, request.AccessToken, entity.Role(request.Role)); err != nil {
+	claims, err := s.uc.Authenticate(ctx, request.AccessToken, entity.Role(request.Role))
+	if err != nil {
 		if errors.Is(err, usecase.ErrTokenExpired) {
 			return nil, status.Error(codes.Unauthenticated, "token expired")
 		}
@@ -127,7 +128,10 @@ func (s *Server) Auth(ctx context.Context, request *auth.AuthRequest) (*auth.Emp
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &auth.Empty{}, nil
+	return &auth.AuthResponse{
+		UserId: claims.Id,
+		Role:   auth.Role(claims.Role),
+	}, nil
 }
 
 func (s *Server) Refresh(ctx context.Context, request *auth.RefreshRequest) (*auth.Tokens, error) {

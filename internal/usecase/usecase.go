@@ -138,7 +138,7 @@ func (s *UseCase) SingOut(ctx context.Context, accessToken string) error {
 	return s.tokenStorage.Delete(ctx, claims.Id)
 }
 
-func (s *UseCase) Authenticate(ctx context.Context, accessToken string, role entity.Role) error {
+func (s *UseCase) Authenticate(ctx context.Context, accessToken string, role entity.Role) (*entity.UserClaims, error) {
 
 	log := ctx.Value("logger").(*slog.Logger).With(slog.String("method", "Authenticate"))
 
@@ -147,29 +147,29 @@ func (s *UseCase) Authenticate(ctx context.Context, accessToken string, role ent
 		log.Error("failed to validate access token", slog.String("err", err.Error()))
 
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			return ErrTokenExpired
+			return nil, ErrTokenExpired
 		}
 
-		return ErrInvalidToken
+		return nil, ErrInvalidToken
 	}
 
 	u, err := s.userStorage.Get(ctx, claims.Id)
 	if err != nil {
 		log.Error("failed to get user: %v", err)
-		return ErrUserNotFound
+		return nil, ErrUserNotFound
 	}
 
 	if _, err := s.tokenStorage.Get(ctx, claims.Id); err != nil {
 		log.Error("session not found", slog.String("err", err.Error()))
-		return ErrSessionNotFound
+		return nil, ErrSessionNotFound
 	}
 
 	if entity.GetRoleFromString(u.Role) > role {
 		log.Error("invalid role", slog.String("role", role.String()), slog.String("user_role", u.Role))
-		return ErrInvalidRole
+		return nil, ErrInvalidRole
 	}
 
-	return nil
+	return claims, nil
 }
 
 func (s *UseCase) checkRole(compareTo string, roles ...string) bool {

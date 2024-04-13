@@ -52,7 +52,7 @@ type User struct {
 
 type UserClaims struct {
 	Id   string `json:"id"`
-	Role string `json:"role"`
+	Role Role   `json:"role"`
 }
 
 type Tokens struct {
@@ -63,6 +63,6 @@ type Tokens struct {
 func (u *User) GetClaims() *UserClaims {
 	return &UserClaims{
 		Id:   u.Id,
-		Role: u.Role,
+		Role: GetRoleFromString(u.Role),
 	}
 }
