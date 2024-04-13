@@ -9,6 +9,28 @@ const (
 
 type Role int8
 
+func (r Role) String() string {
+	switch r {
+	case RoleAdmin:
+		return "admin"
+	case RoleUser:
+		return "user"
+	default:
+		return "unknown"
+	}
+}
+
+func GetRoleFromString(role string) Role {
+	switch role {
+	case "admin":
+		return RoleAdmin
+	case "user":
+		return RoleUser
+	default:
+		return RoleUser
+	}
+}
+
 type UserCredentials struct {
 	Phone    string  `json:"phone" db:"phone"`
 	Email    *string `json:"email" db:"email"`
