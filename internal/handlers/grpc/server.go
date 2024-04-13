@@ -18,7 +18,7 @@ type AuthUseCase interface {
 	SignUp(ctx context.Context, user *entity.User) (*entity.Tokens, error)
 	SignIn(ctx context.Context, user *entity.User) (*entity.Tokens, error)
 	SingOut(ctx context.Context, accessToken string) error
-	Authenticate(ctx context.Context, accessToken string, role string) error
+	Authenticate(ctx context.Context, accessToken string, role entity.Role) error
 	Refresh(ctx context.Context, refreshToken string) (*entity.Tokens, error)
 }
 
@@ -107,7 +107,7 @@ func (s *Server) SignOut(ctx context.Context, request *auth.SignOutRequest) (*au
 
 func (s *Server) Auth(ctx context.Context, request *auth.AuthRequest) (*auth.Empty, error) {
 
-	if err := s.uc.Authenticate(ctx, request.AccessToken, request.Role.String()); err != nil {
+	if err := s.uc.Authenticate(ctx, request.AccessToken, entity.Role(request.Role)); err != nil {
 		if errors.Is(err, usecase.ErrTokenExpired) {
 			return nil, status.Error(codes.Unauthenticated, "token expired")
 		}

@@ -138,7 +138,7 @@ func (s *UseCase) SingOut(ctx context.Context, accessToken string) error {
 	return s.tokenStorage.Delete(ctx, claims.Id)
 }
 
-func (s *UseCase) Authenticate(ctx context.Context, accessToken string, role string) error {
+func (s *UseCase) Authenticate(ctx context.Context, accessToken string, role entity.Role) error {
 
 	log := ctx.Value("logger").(*slog.Logger).With(slog.String("method", "Authenticate"))
 
@@ -164,12 +164,22 @@ func (s *UseCase) Authenticate(ctx context.Context, accessToken string, role str
 		return ErrSessionNotFound
 	}
 
-	if role != u.Role {
-		log.Error("invalid role", slog.String("role", role), slog.String("user_role", u.Role))
+	if entity.GetRoleFromString(u.Role) > role {
+		log.Error("invalid role", slog.String("role", role.String()), slog.String("user_role", u.Role))
 		return ErrInvalidRole
 	}
 
 	return nil
+}
+
+func (s *UseCase) checkRole(compareTo string, roles ...string) bool {
+	for _, r := range roles {
+		if r == compareTo {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *UseCase) Refresh(ctx context.Context, refreshToken string) (*entity.Tokens, error) {
