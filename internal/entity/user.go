@@ -38,16 +38,17 @@ type UserCredentials struct {
 }
 
 type User struct {
-	Id string `json:"id"`
-	UserCredentials
-	LastName        *string    `json:"lastName" db:"last_name"`
-	FirstName       *string    `json:"firstName" db:"first_name"`
-	MiddleName      *string    `json:"middleName" db:"middle_name"`
+	Id              string     `json:"id"`
+	LastName        string     `json:"lastName" db:"last_name"`
+	FirstName       string     `json:"firstName" db:"first_name"`
+	MiddleName      string     `json:"middleName" db:"middle_name"`
 	Role            string     `json:"role" db:"role"`
 	IsPhoneVerified bool       `json:"isPhoneVerified" db:"is_phone_verified"`
 	IsEmailVerified bool       `json:"isEmailVerified" db:"is_email_verified"`
 	CreatedAt       time.Time  `json:"createdAt" db:"created_at"`
 	UpdatedAt       *time.Time `json:"updatedAt" db:"updated_at"`
+
+	UserCredentials
 }
 
 type UserClaims struct {

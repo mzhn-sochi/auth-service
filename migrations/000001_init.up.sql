@@ -3,9 +3,9 @@ CREATE TYPE roles AS ENUM ('admin', 'user');
 CREATE TABLE IF NOT EXISTS users
 (
     id                TEXT PRIMARY KEY,
-    last_name         TEXT,
-    first_name        TEXT,
-    middle_name       TEXT,
+    last_name         TEXT NOT NULL,
+    first_name        TEXT NOT NULL,
+    middle_name       TEXT NOT NULL,
     role              roles           NOT NULL DEFAULT 'user',
     phone             CHAR(11) UNIQUE NOT NULL,
     password          TEXT            NOT NULL,

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/mzhn-sochi/auth-service/internal/config"
 	"github.com/mzhn-sochi/auth-service/internal/entity"
 	"github.com/mzhn-sochi/auth-service/internal/lib/jwt"
@@ -85,6 +86,15 @@ func (s *UseCase) SignUp(ctx context.Context, user *entity.User) (*entity.Tokens
 	}
 
 	if err := s.userStorage.Create(ctx, user); err != nil {
+
+		if e, ok := err.(*pq.Error); ok {
+			switch e.Code {
+			case "23505":
+				log.Error("duplicated data", slog.String("error", e.Message))
+				return nil, ErrUserAlreadyExists
+			}
+		}
+
 		return nil, fmt.Errorf("failed to create user: %v", err)
 	}
 
@@ -97,8 +107,8 @@ func (s *UseCase) SignIn(ctx context.Context, user *entity.User) (*entity.Tokens
 
 	u, err := s.userStorage.GetByPhone(ctx, user.Phone)
 	if err != nil {
-		// TODO handle errors
-		return nil, fmt.Errorf("user with phone %s not found", user.Email)
+		log.Error("failed to get user by phone", slog.String("error", err.Error()))
+		return nil, ErrInvalidCredentials
 	}
 
 	if err := s.verifyPassword(u.Password, user.Password); err != nil {

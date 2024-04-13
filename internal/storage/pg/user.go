@@ -102,11 +102,12 @@ func (u *UserStorage) Create(ctx context.Context, user *entity.User) error {
 	log := ctx.Value("logger").(*slog.Logger).With("method", "Create")
 
 	query, args, err := squirrel.Insert("users").
-		Columns("id", "phone", "password").
-		Values(user.Id, user.Phone, user.Password).
+		Columns("id", "phone", "password", "last_name", "first_name", "middle_name").
+		Values(user.Id, user.Phone, user.Password, user.LastName, user.FirstName, user.MiddleName).
 		Suffix("RETURNING *").
 		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
+
 	if err != nil {
 		log.Error("failed to generate SQL query", slog.String("err", err.Error()))
 		return err
@@ -153,6 +154,7 @@ func (u *UserStorage) Delete(ctx context.Context, id int) error {
 		Where(squirrel.Eq{"id": id}).
 		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
+
 	if err != nil {
 		log.Error("failed to generate SQL query", slog.String("err", err.Error()))
 		return err

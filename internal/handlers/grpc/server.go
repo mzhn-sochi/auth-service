@@ -76,6 +76,9 @@ func (s *Server) SignUp(ctx context.Context, request *auth.SignUpRequest) (*auth
 			Phone:    request.Phone,
 			Password: request.Password,
 		},
+		LastName:   request.LastName,
+		FirstName:  request.FirstName,
+		MiddleName: request.MiddleName,
 	}
 
 	tokens, err := s.auc.SignUp(ctx, user)
@@ -212,5 +215,4 @@ func (s *Server) FindUsersByIds(ctx context.Context, request *auth.FindUsersById
 	return &auth.FindUsersByIdsResponse{
 		Users: uu,
 	}, nil
-
 }
